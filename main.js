@@ -7,6 +7,8 @@ const createS = require('./s')
 const createT = require('./t')
 const createZ = require('./z')
 
+let score = 0
+
 const map = {
 	width: 10,
 	height: 16
@@ -32,6 +34,7 @@ const draw = () => {
 		}
 		console.log(line)
 	}
+	console.log('score: ' + score);
 }
 
 const create = (x, y) => {
@@ -44,6 +47,12 @@ const create = (x, y) => {
 	if(r == 4) return createS(x, y);
 	if(r == 5) return createT(x, y);
 	if(r == 6) return createZ(x, y);
+}
+
+const die = () => {
+	console.log('you lost')
+	console.log('score: ' + score);
+	process.exit()
 }
 
 const check = () => {
@@ -60,6 +69,7 @@ const check = () => {
 		}
 
 		if(points > 10) {
+			score++
 			row.forEach(b => b.y = map.height + 10)
 			blocks.forEach(b => {
 				if(b.y <= y) {
@@ -68,13 +78,19 @@ const check = () => {
 			})
 		}
 	}
+
+	blocks.forEach(b => {
+		if(b.y == 0 && !b.falling) {
+			die();
+		}
+	})
 }
 
 const another = () => {
 	blocks.forEach(b => b.falling = false)
 	check();
 
-	blocks = [...blocks, ...create(4, 0)]
+	blocks = [...blocks, ...create(4, -2)]
 }
 
 const fall = () => {
@@ -115,7 +131,7 @@ const rotate = (n) => {
 		if(b.falling) {
 			const x = b.y - lowestY;
 			const y = b.x - lowestX;
-			b.y = (y * n) + lowestY;
+			b.y = (y * -n) + lowestY;
 			b.x = (x * n) + lowestX;
 		}
 	})
@@ -146,10 +162,14 @@ const align = () => {
 const update = () => {
 	console.clear();
 	align();
-	draw();
+	
+	if(collide()) {
+		another()
+	} else {
+		fall();
+	}
 
-	fall();
-	if(collide()) another()
+	draw();
 }
 
 const main = () => {
